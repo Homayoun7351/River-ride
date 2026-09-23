@@ -209,20 +209,34 @@
     ctx.save();ctx.translate(Math.round(e.x),Math.round(e.y));
     const isAmme=e.name==="عمه";
     const w=isAmme?44:(e.type==="jet"?30:28), h=isAmme?28:(e.type==="jet"?18:20);
-    ctx.fillStyle="#151716";ctx.fillRect(-w/2,-h/2,w,h);
-    ctx.strokeStyle="#ddd5a5";ctx.lineWidth=2;ctx.strokeRect(-w/2,-h/2,w,h);
-    ctx.fillStyle="#30352e";
-    if(e.type==="boat") ctx.fillRect(-11,-4,22,8);
-    else if(e.type==="heli"){ctx.fillRect(-10,-4,20,8);ctx.fillRect(-12,-7,24,2);}
-    else {ctx.fillRect(-12,-2,24,4);ctx.fillRect(-3,-8,6,16);}
+    ctx.fillStyle="#151716";
+    ctx.strokeStyle="#ddd5a5";ctx.lineWidth=2;
+    if(isAmme){
+      ctx.beginPath();ctx.moveTo(-22,7);ctx.lineTo(-13,-7);ctx.lineTo(-5,-4);ctx.lineTo(0,-12);ctx.lineTo(5,-4);ctx.lineTo(13,-7);ctx.lineTo(22,7);ctx.closePath();ctx.fill();ctx.stroke();
+      ctx.fillStyle="#6b4430";ctx.fillRect(-8,-2,16,5);
+    } else if(e.type==="boat"){
+      ctx.beginPath();ctx.moveTo(-14,6);ctx.lineTo(-10,-6);ctx.lineTo(8,-6);ctx.lineTo(14,6);ctx.closePath();ctx.fill();ctx.stroke();
+      ctx.fillStyle="#315f64";ctx.fillRect(-7,-3,14,4);ctx.fillStyle="#b9a45e";ctx.fillRect(-2,-11,4,5);
+    } else if(e.type==="heli"){
+      ctx.beginPath();ctx.moveTo(-13,2);ctx.lineTo(-7,-6);ctx.lineTo(7,-6);ctx.lineTo(13,2);ctx.lineTo(7,7);ctx.lineTo(-7,7);ctx.closePath();ctx.fill();ctx.stroke();
+      ctx.fillStyle="#30352e";ctx.fillRect(-17,-9,34,2);ctx.fillRect(-2,-12,4,4);
+    } else {
+      ctx.beginPath();ctx.moveTo(-15,7);ctx.lineTo(-5,2);ctx.lineTo(-10,-8);ctx.lineTo(-2,-6);ctx.lineTo(0,-11);ctx.lineTo(2,-6);ctx.lineTo(10,-8);ctx.lineTo(5,2);ctx.lineTo(15,7);ctx.lineTo(4,5);ctx.lineTo(0,9);ctx.lineTo(-4,5);ctx.closePath();ctx.fill();ctx.stroke();
+      ctx.fillStyle="#30352e";ctx.fillRect(-3,-3,6,9);
+    }
     ctx.fillStyle="#f5f0d0";ctx.font="bold 8px Tahoma,Arial,sans-serif";
     ctx.textAlign="center";ctx.textBaseline="middle";ctx.direction="rtl";ctx.fillText(e.name,0,0);
     ctx.restore();
   }
   function drawFuel(p){
-    ctx.fillStyle="#e0d59c";ctx.fillRect(p.x-4,p.y-5,8,10);
-    ctx.fillStyle="#a8322a";ctx.fillRect(p.x-2,p.y-3,4,6);
-    ctx.fillStyle="#eee8bd";ctx.fillRect(p.x-1,p.y-2,2,4);
+    const x=Math.round(p.x), y=Math.round(p.y);
+    ctx.save();ctx.translate(x,y);
+    ctx.fillStyle="#e0d59c";ctx.fillRect(-7,-9,14,18);
+    ctx.fillStyle="#8b6b3e";ctx.fillRect(-5,-11,10,3);ctx.fillRect(5,-8,4,5);
+    ctx.fillStyle="#a8322a";ctx.fillRect(-4,-5,8,10);
+    ctx.fillStyle="#eee8bd";ctx.fillRect(-2,-3,4,6);
+    ctx.fillStyle="#f5f0d0";ctx.font="bold 5px Tahoma,Arial,sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.direction="rtl";ctx.fillText("بنزین",0,13);
+    ctx.restore();
   }
   function drawRiver(){
     ctx.fillStyle="#b8a96c";ctx.fillRect(0,0,W,H);
