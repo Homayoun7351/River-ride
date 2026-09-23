@@ -145,6 +145,11 @@
     if(right)player.x+=85*dt;
     if(up)player.y-=75*dt;
     if(down)player.y+=75*dt;
+    if(touchTargetX!==null){
+      const k=Math.min(1,dt*20);
+      player.x += (touchTargetX-player.x)*k;
+      player.y += (touchTargetY-player.y)*k;
+    }
     player.x=Math.max(5,Math.min(W-5,player.x));
     player.y=Math.max(28,Math.min(H-12,player.y));
 
@@ -320,16 +325,29 @@
     btn.addEventListener("pointercancel",()=>setKey(k,false));
     btn.addEventListener("pointerleave",()=>setKey(k,false));
   });
-  let touchId=null;
-  canvas.addEventListener("pointerdown",e=>{if(!running)return;touchId=e.pointerId;canvas.setPointerCapture(touchId);});
+  let touchId=null, touchTargetX=null, touchTargetY=null;
+  canvas.addEventListener("pointerdown",e=>{
+    if(!running)return;
+    touchId=e.pointerId;
+    canvas.setPointerCapture(touchId);
+    const r=canvas.getBoundingClientRect();
+    touchTargetX=(e.clientX-r.left)/r.width*W;
+    touchTargetY=(e.clientY-r.top)/r.height*H;
+    e.preventDefault();
+  });
   canvas.addEventListener("pointermove",e=>{
     if(e.pointerId!==touchId||!running)return;
     const r=canvas.getBoundingClientRect();
-    player.x=(e.clientX-r.left)/r.width*W;
-    player.y=(e.clientY-r.top)/r.height*H;
+    touchTargetX=Math.max(0,Math.min(W,(e.clientX-r.left)/r.width*W));
+    touchTargetY=Math.max(0,Math.min(H,(e.clientY-r.top)/r.height*H));
+    e.preventDefault();
   });
-  canvas.addEventListener("pointerup",e=>{if(e.pointerId===touchId)touchId=null;});
-  canvas.addEventListener("pointercancel",e=>{if(e.pointerId===touchId)touchId=null;});
+  canvas.addEventListener("pointerup",e=>{
+    if(e.pointerId===touchId){touchId=null;touchTargetX=null;touchTargetY=null;}
+  });
+  canvas.addEventListener("pointercancel",e=>{
+    if(e.pointerId===touchId){touchId=null;touchTargetX=null;touchTargetY=null;}
+  });
 
   $("score").textContent="000000";$("fuel").textContent="100";$("hi").textContent=String(hi).padStart(6,"0");
   requestAnimationFrame(loop);
