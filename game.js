@@ -71,11 +71,11 @@
       particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:rand(.25,.7),max:.7,size:big?rand(1,3):1});
     }
   }
-  function addEnemy(type){
+  const attackerNames=["عمه","فی فی","فافا","معراج","احمد"];\n  function addEnemy(type){
     const r=riverAt(-scroll-10);
     const margin=10;
     const x=rand(r.c-r.w/2+margin,r.c+r.w/2-margin);
-    enemies.push({type,x,y:-12,w:type==="jet"?14:12,h:type==="jet"?7:10,vy:type==="jet"?rand(45,70):rand(22,40),phase:rand(0,9),dead:false});
+    enemies.push({type,x,y:-16,name:attackerNames[Math.floor(Math.random()*attackerNames.length)],w:type==="jet"?30:28,h:type==="jet"?18:20,vy:type==="jet"?rand(45,70):rand(22,40),phase:rand(0,9),dead:false});
   }
   function addFuel(){
     const r=riverAt(-10);
@@ -206,13 +206,15 @@
   }
   function drawEnemy(e){
     ctx.save();ctx.translate(Math.round(e.x),Math.round(e.y));
-    if(e.type==="boat"){
-      ctx.fillStyle="#1c1c18";ctx.fillRect(-6,-3,12,7);ctx.fillStyle="#ddd5a5";ctx.fillRect(-4,-5,7,2);ctx.fillStyle="#b03028";ctx.fillRect(-2,-2,4,3);
-    } else if(e.type==="heli"){
-      ctx.fillStyle="#30352e";ctx.fillRect(-5,-3,10,6);ctx.fillStyle="#eee5b0";ctx.fillRect(-8,-5,16,1);ctx.fillRect(-1,-7,2,3);ctx.fillStyle="#a52d28";ctx.fillRect(3,-2,3,2);
-    } else {
-      ctx.fillStyle="#d8d2a5";ctx.fillRect(-7,-2,14,4);ctx.fillRect(-2,-5,5,10);ctx.fillStyle="#b5332d";ctx.fillRect(-1,-4,2,3);
-    }
+    const w=e.type==="jet"?30:28, h=e.type==="jet"?18:20;
+    ctx.fillStyle="#151716";ctx.fillRect(-w/2,-h/2,w,h);
+    ctx.strokeStyle="#ddd5a5";ctx.lineWidth=2;ctx.strokeRect(-w/2,-h/2,w,h);
+    ctx.fillStyle="#30352e";
+    if(e.type==="boat") ctx.fillRect(-11,-4,22,8);
+    else if(e.type==="heli"){ctx.fillRect(-10,-4,20,8);ctx.fillRect(-12,-7,24,2);}
+    else {ctx.fillRect(-12,-2,24,4);ctx.fillRect(-3,-8,6,16);}
+    ctx.fillStyle="#f5f0d0";ctx.font="bold 8px Tahoma,Arial,sans-serif";
+    ctx.textAlign="center";ctx.textBaseline="middle";ctx.direction="rtl";ctx.fillText(e.name,0,0);
     ctx.restore();
   }
   function drawFuel(p){
