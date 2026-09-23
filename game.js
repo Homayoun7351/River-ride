@@ -17,7 +17,7 @@
   function resetRiver() {
     river = [];
     let center = W/2, width = 170;
-    for (let y=0;y<=H+80;y+=4) {
+    for (let y=0;y<=10000;y+=4) {
       center += (Math.random()-.5)*5;
       center = Math.max(82, Math.min(W-82, center));
       width += (Math.random()-.5)*3;
@@ -72,7 +72,7 @@
     }
   }
   function addEnemy(type){
-    const r=riverAt(-10);
+    const r=riverAt(scroll-10);
     const margin=10;
     const x=rand(r.c-r.w/2+margin,r.c+r.w/2-margin);
     enemies.push({type,x,y:-12,w:type==="jet"?14:12,h:type==="jet"?7:10,vy:type==="jet"?rand(45,70):rand(22,40),phase:rand(0,9),dead:false});
@@ -106,7 +106,7 @@
     running=false; gameOver=true;
     if(score>hi){hi=score;localStorage.setItem("riverRideHi",hi);}
     $("hi").textContent=String(hi).padStart(6,"0");
-    $("overlay").innerHTML='<div class="title">GAME OVER</div><div class="subtitle">SCORE '+String(score).padStart(6,"0")+'</div><button id="start">PLAY AGAIN</button><div class="help">ARROWS / WASD · SPACE TO FIRE</div>';
+    $("overlay").innerHTML='<div class="title">پایان بازی</div><div class="subtitle">امتیاز: '+String(score).padStart(6,"0")+'</div><button id="start">بازی دوباره</button><div class="help">کلیدهای جهت‌دار یا WASD · فاصله برای شلیک</div>';
     $("overlay").classList.remove("hidden");
     $("start").onclick=startGame;
   }
@@ -136,7 +136,7 @@
     player.x=Math.max(5,Math.min(W-5,player.x));
     player.y=Math.max(28,Math.min(H-12,player.y));
 
-    const r=riverAt(player.y);
+    const r=riverAt(player.y+scroll);
     if(player.x < r.c-r.w/2+5 || player.x > r.c+r.w/2-5) {
       speed=Math.max(35,speed-35*dt);
       fuel=Math.max(0,fuel-7*dt);
@@ -223,7 +223,7 @@
   function drawRiver(){
     ctx.fillStyle="#b8a96c";ctx.fillRect(0,0,W,H);
     for(let y=0;y<H;y+=4){
-      const r=riverAt(y), l=Math.floor(r.c-r.w/2), rr=Math.ceil(r.c+r.w/2);
+      const r=riverAt(y+scroll), l=Math.floor(r.c-r.w/2), rr=Math.ceil(r.c+r.w/2);
       ctx.fillStyle="#274f5a";ctx.fillRect(l,y,rr-l,4);
       ctx.fillStyle="#315f64";
       const wave=((y+Math.floor(scroll))>>2)%2;
