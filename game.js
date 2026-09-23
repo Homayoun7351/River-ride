@@ -319,9 +319,10 @@
   const fireBtn=$("fire");
   fireBtn.addEventListener("pointerdown",e=>{e.preventDefault();fire();});
 
-  // Desktop: left mouse button fires while the pointer is over the game.
-  canvas.addEventListener("mousedown",e=>{
-    if(e.button===0 && window.matchMedia("(min-width: 601px)").matches){
+  // Desktop: left mouse click fires.
+  // Use the pointer event so Chrome/Edge reliably deliver the click to the canvas.
+  canvas.addEventListener("pointerdown",e=>{
+    if(e.pointerType==="mouse" && e.button===0 && window.matchMedia("(min-width: 601px)").matches){
       e.preventDefault();
       fire();
     }
