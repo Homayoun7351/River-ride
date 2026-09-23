@@ -99,6 +99,12 @@
   }
 
   function startGame(){
+    if(document.documentElement.requestFullscreen){
+      document.documentElement.requestFullscreen().catch(()=>{});
+    }
+    if(screen.orientation && screen.orientation.lock){
+      screen.orientation.lock("portrait").catch(()=>{});
+    }
     running=true; gameOver=false; score=0; fuel=100; speed=55; scroll=0;
     spawnTimer=0; bridgeTimer=rand(12,18); fuelTimer=rand(5,9);
     enemies=[];bullets=[];enemyBullets=[];particles=[];pickups=[];bridges=[];
