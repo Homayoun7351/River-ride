@@ -350,23 +350,34 @@
   });
   const joystick=document.getElementById("joystick");
   if(joystick){
-    const joyState={up:false,down:false,left:false,right:false};
-    const joyButtons=joystick.querySelectorAll(".joy");
-    function setJoy(btn,on){
-      const d=btn.dataset.dir;
-      joyState[d]=on;
-      btn.classList.toggle("active",on);
-      keys.ArrowUp=joyState.up; keys.ArrowDown=joyState.down;
-      keys.ArrowLeft=joyState.left; keys.ArrowRight=joyState.right;
-    }
-    joyButtons.forEach(btn=>{
-      const down=e=>{e.preventDefault();btn.setPointerCapture?.(e.pointerId);setJoy(btn,true);};
-      const up=e=>{e.preventDefault();setJoy(btn,false);};
-      btn.addEventListener("pointerdown",down);
-      btn.addEventListener("pointerup",up);
-      btn.addEventListener("pointercancel",up);
-      btn.addEventListener("pointerleave",e=>{if(e.buttons===0)setJoy(btn,false);});
+    const knob=joystick.querySelector(".joy-knob");
+    let joyPointer=null;
+    const updateJoy=e=>{
+      const r=joystick.getBoundingClientRect();
+      const cx=r.left+r.width/2, cy=r.top+r.height/2;
+      let dx=e.clientX-cx, dy=e.clientY-cy;
+      const max=r.width*.34;
+      const dist=Math.hypot(dx,dy);
+      if(dist>max){dx=dx/dist*max;dy=dy/dist*max;}
+      knob.style.transform=`translate(${dx}px,${dy}px)`;
+      const nx=dx/max, ny=dy/max;
+      keys.ArrowLeft=nx<-.18; keys.ArrowRight=nx>.18;
+      keys.ArrowUp=ny<-.18; keys.ArrowDown=ny>.18;
+    };
+    const releaseJoy=()=>{
+      joyPointer=null;
+      keys.ArrowLeft=keys.ArrowRight=keys.ArrowUp=keys.ArrowDown=false;
+      knob.style.transform="translate(0,0)";
+    };
+    joystick.addEventListener("pointerdown",e=>{
+      e.preventDefault(); joyPointer=e.pointerId;
+      joystick.setPointerCapture(joyPointer); updateJoy(e);
     });
+    joystick.addEventListener("pointermove",e=>{
+      if(e.pointerId===joyPointer){e.preventDefault();updateJoy(e);}
+    });
+    joystick.addEventListener("pointerup",releaseJoy);
+    joystick.addEventListener("pointercancel",releaseJoy);
   }
 
   $("score").textContent="000000";$("fuel").textContent="100";$("hi").textContent=String(hi).padStart(6,"0");
