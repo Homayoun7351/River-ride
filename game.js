@@ -318,6 +318,14 @@
   $("start").onclick=startGame;
   const fireBtn=$("fire");
   fireBtn.addEventListener("pointerdown",e=>{e.preventDefault();fire();});
+
+  // Desktop: left mouse button fires while the pointer is over the game.
+  canvas.addEventListener("mousedown",e=>{
+    if(e.button===0 && window.matchMedia("(min-width: 601px)").matches){
+      e.preventDefault();
+      fire();
+    }
+  });
   document.querySelectorAll("[data-key]").forEach(btn=>{
     const k=btn.dataset.key;
     btn.addEventListener("pointerdown",e=>{e.preventDefault();setKey(k,true);});
