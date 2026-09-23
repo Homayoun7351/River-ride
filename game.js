@@ -348,6 +348,26 @@
   canvas.addEventListener("pointercancel",e=>{
     if(e.pointerId===touchId){touchId=null;touchTargetX=null;touchTargetY=null;}
   });
+  const joystick=document.getElementById("joystick");
+  if(joystick){
+    const joyState={up:false,down:false,left:false,right:false};
+    const joyButtons=joystick.querySelectorAll(".joy");
+    function setJoy(btn,on){
+      const d=btn.dataset.dir;
+      joyState[d]=on;
+      btn.classList.toggle("active",on);
+      keys.ArrowUp=joyState.up; keys.ArrowDown=joyState.down;
+      keys.ArrowLeft=joyState.left; keys.ArrowRight=joyState.right;
+    }
+    joyButtons.forEach(btn=>{
+      const down=e=>{e.preventDefault();btn.setPointerCapture?.(e.pointerId);setJoy(btn,true);};
+      const up=e=>{e.preventDefault();setJoy(btn,false);};
+      btn.addEventListener("pointerdown",down);
+      btn.addEventListener("pointerup",up);
+      btn.addEventListener("pointercancel",up);
+      btn.addEventListener("pointerleave",e=>{if(e.buttons===0)setJoy(btn,false);});
+    });
+  }
 
   $("score").textContent="000000";$("fuel").textContent="100";$("hi").textContent=String(hi).padStart(6,"0");
   requestAnimationFrame(loop);
