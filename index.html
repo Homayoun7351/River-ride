@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>River Ride — Atari-style</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="cabinet">
+  <div class="marquee">RIVER RIDE</div>
+  <div class="screen-wrap">
+    <canvas id="game" width="320" height="192" aria-label="River Ride game"></canvas>
+    <div id="overlay" class="overlay">
+      <div class="title">RIVER RIDE</div>
+      <div class="subtitle">ATARI-STYLE EDITION</div>
+      <button id="start">START GAME</button>
+      <div class="help">ARROWS / WASD · SPACE TO FIRE<br>Touch: drag to fly · FIRE button to shoot</div>
+    </div>
+  </div>
+  <div class="controls">
+    <div class="dpad">
+      <button data-key="ArrowUp">▲</button>
+      <div><button data-key="ArrowLeft">◀</button><button data-key="ArrowDown">▼</button><button data-key="ArrowRight">▶</button></div>
+    </div>
+    <button id="fire">FIRE</button>
+  </div>
+  <div class="readout"><span>SCORE <b id="score">000000</b></span><span>FUEL <b id="fuel">100</b>%</span><span>HI <b id="hi">000000</b></span></div>
+</div>
+<script src="game.js"></script>
+</body>
+</html>
