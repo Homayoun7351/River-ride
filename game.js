@@ -40,9 +40,8 @@
     river.shift();
   }
   function updateRiver(dt) {
-    const dy = speed*dt;
-    for (const r of river) r.y += dy;
-    while (river[0].y > -4) makeSegment();
+    // Keep the river path stable. The water itself animates via the scroll value.
+    // This avoids shifting the whole path every frame and keeps the game responsive.
   }
 
   function rand(a,b){ return a + Math.random()*(b-a); }
