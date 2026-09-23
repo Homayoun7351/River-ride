@@ -1,0 +1,297 @@
+(() => {
+  const canvas = document.getElementById("game");
+  const ctx = canvas.getContext("2d", { alpha: false });
+  ctx.imageSmoothingEnabled = false;
+
+  const W = canvas.width, H = canvas.height;
+  const keys = Object.create(null);
+  let running = false, gameOver = false, last = 0, time = 0;
+  let score = 0, fuel = 100, hi = Number(localStorage.getItem("riverRideHi") || 0);
+  let speed = 55, scroll = 0, spawnTimer = 0, bridgeTimer = 12, fuelTimer = 7;
+  let river = [], enemies = [], bullets = [], particles = [], pickups = [], bridges = [];
+  const player = { x: W/2, y: H-42, w: 11, h: 15, inv: 0 };
+
+  const $ = id => document.getElementById(id);
+  $("hi").textContent = String(hi).padStart(6,"0");
+
+  function resetRiver() {
+    river = [];
+    let center = W/2, width = 170;
+    for (let y=0;y<=H+80;y+=4) {
+      center += (Math.random()-.5)*5;
+      center = Math.max(82, Math.min(W-82, center));
+      width += (Math.random()-.5)*3;
+      width = Math.max(115, Math.min(178,width));
+      river.push({y, c:center, w:width});
+    }
+  }
+  resetRiver();
+
+  function riverAt(y) {
+    const i = Math.max(0, Math.min(river.length-1, Math.floor(y/4)));
+    return river[i] || river[river.length-1];
+  }
+  function makeSegment() {
+    const lastR = river[river.length-1];
+    let c = lastR.c + (Math.random()-.5)*8;
+    c = Math.max(62, Math.min(W-62,c));
+    let w = Math.max(105, Math.min(176,lastR.w + (Math.random()-.5)*6));
+    river.push({y:lastR.y+4,c,w});
+    river.shift();
+  }
+  function updateRiver(dt) {
+    const dy = speed*dt;
+    for (const r of river) r.y += dy;
+    while (river[0].y > -4) makeSegment();
+  }
+
+  function rand(a,b){ return a + Math.random()*(b-a); }
+  function rectHit(a,b){ return Math.abs(a.x-b.x)*2 < a.w+b.w && Math.abs(a.y-b.y)*2 < a.h+b.h; }
+
+  function sound(type) {
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      if (!sound.ac) sound.ac = new AC();
+      const ac = sound.ac, o = ac.createOscillator(), g = ac.createGain();
+      o.connect(g); g.connect(ac.destination);
+      const now = ac.currentTime;
+      if(type==="fire"){o.type="square";o.frequency.setValueAtTime(480,now);o.frequency.exponentialRampToValueAtTime(120,now+.07);g.gain.setValueAtTime(.045,now);g.gain.exponentialRampToValueAtTime(.001,now+.08);}
+      if(type==="hit"){o.type="sawtooth";o.frequency.setValueAtTime(180,now);o.frequency.exponentialRampToValueAtTime(45,now+.28);g.gain.setValueAtTime(.08,now);g.gain.exponentialRampToValueAtTime(.001,now+.3);}
+      if(type==="pickup"){o.type="square";o.frequency.setValueAtTime(330,now);o.frequency.setValueAtTime(520,now+.08);g.gain.setValueAtTime(.06,now);g.gain.exponentialRampToValueAtTime(.001,now+.18);}
+      if(type==="bridge"){o.type="square";o.frequency.setValueAtTime(110,now);o.frequency.setValueAtTime(70,now+.2);g.gain.setValueAtTime(.05,now);g.gain.exponentialRampToValueAtTime(.001,now+.25);}
+      if(type==="start"){o.type="square";o.frequency.setValueAtTime(220,now);o.frequency.setValueAtTime(440,now+.12);o.frequency.setValueAtTime(660,now+.24);g.gain.setValueAtTime(.05,now);g.gain.exponentialRampToValueAtTime(.001,now+.4);}
+      o.start(now); o.stop(now+.45);
+    } catch(e) {}
+  }
+
+  function explosion(x,y,big=false){
+    sound("hit");
+    for(let i=0;i<(big?26:12);i++){
+      const a=rand(0,Math.PI*2), s=rand(18,70);
+      particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:rand(.25,.7),max:.7,size:big?rand(1,3):1});
+    }
+  }
+  function addEnemy(type){
+    const r=riverAt(-10);
+    const margin=10;
+    const x=rand(r.c-r.w/2+margin,r.c+r.w/2-margin);
+    enemies.push({type,x,y:-12,w:type==="jet"?14:12,h:type==="jet"?7:10,vy:type==="jet"?rand(45,70):rand(22,40),phase:rand(0,9),dead:false});
+  }
+  function addFuel(){
+    const r=riverAt(-10);
+    pickups.push({type:"fuel",x:rand(r.c-r.w/2+12,r.c+r.w/2-12),y:-8,w:9,h:9});
+  }
+  function addBridge(){
+    const r=riverAt(-10);
+    bridges.push({y:-10,c:r.c,w:r.w,h:7});
+    sound("bridge");
+  }
+  function fire(){
+    if(!running) return;
+    bullets.push({x:player.x,y:player.y-9,w:2,h:6,vy:-190});
+    sound("fire");
+  }
+
+  function startGame(){
+    running=true; gameOver=false; score=0; fuel=100; speed=55; scroll=0;
+    spawnTimer=0; bridgeTimer=rand(12,18); fuelTimer=rand(5,9);
+    enemies=[];bullets=[];particles=[];pickups=[];bridges=[];
+    player.x=W/2; player.y=H-42; player.inv=1.5;
+    resetRiver();
+    $("overlay").classList.add("hidden");
+    sound("start");
+  }
+
+  function endGame(){
+    running=false; gameOver=true;
+    if(score>hi){hi=score;localStorage.setItem("riverRideHi",hi);}
+    $("hi").textContent=String(hi).padStart(6,"0");
+    $("overlay").innerHTML='<div class="title">GAME OVER</div><div class="subtitle">SCORE '+String(score).padStart(6,"0")+'</div><button id="start">PLAY AGAIN</button><div class="help">ARROWS / WASD · SPACE TO FIRE</div>';
+    $("overlay").classList.remove("hidden");
+    $("start").onclick=startGame;
+  }
+
+  function damage(){
+    if(player.inv>0)return;
+    explosion(player.x,player.y,true);
+    player.inv=2;
+    fuel=Math.max(0,fuel-25);
+    if(fuel<=0) endGame();
+  }
+
+  function update(dt){
+    time+=dt;
+    if(!running){
+      scroll+=dt*10;
+      updateRiver(dt*.35);
+      return;
+    }
+    player.inv=Math.max(0,player.inv-dt);
+    const left=keys.ArrowLeft||keys.a, right=keys.ArrowRight||keys.d;
+    const up=keys.ArrowUp||keys.w, down=keys.ArrowDown||keys.s;
+    if(left)player.x-=85*dt;
+    if(right)player.x+=85*dt;
+    if(up)player.y-=75*dt;
+    if(down)player.y+=75*dt;
+    player.x=Math.max(5,Math.min(W-5,player.x));
+    player.y=Math.max(28,Math.min(H-12,player.y));
+
+    const r=riverAt(player.y);
+    if(player.x < r.c-r.w/2+5 || player.x > r.c+r.w/2-5) {
+      speed=Math.max(35,speed-35*dt);
+      fuel=Math.max(0,fuel-7*dt);
+      if(Math.random()<dt*4) particles.push({x:player.x,y:player.y+8,vx:rand(-10,10),vy:rand(5,25),life:.2,max:.2,size:1});
+    } else {
+      speed=Math.min(72,speed+5*dt);
+    }
+
+    updateRiver(dt);
+    scroll += speed*dt;
+
+    fuel-=1.65*dt;
+    if(fuel<=0){fuel=0;endGame();return;}
+
+    spawnTimer-=dt;
+    if(spawnTimer<=0){
+      const n=Math.random()<.18?2:1;
+      for(let i=0;i<n;i++) addEnemy(Math.random()<.25?"jet":(Math.random()<.55?"boat":"heli"));
+      spawnTimer=rand(1.4,2.7)*Math.max(.65,1-score/18000);
+    }
+    fuelTimer-=dt;
+    if(fuelTimer<=0){addFuel();fuelTimer=rand(7,13);}
+    bridgeTimer-=dt;
+    if(bridgeTimer<=0){addBridge();bridgeTimer=rand(14,22);}
+
+    for(const b of bullets)b.y+=b.vy*dt;
+    bullets=bullets.filter(b=>b.y>-10);
+
+    for(const e of enemies){
+      e.y += (e.vy+speed*.35)*dt;
+      e.phase+=dt*3;
+      if(e.type==="jet") e.x += Math.sin(e.phase)*18*dt;
+      if(e.type==="heli") e.x += Math.sin(e.phase)*8*dt;
+      if(rectHit(player,e)) damage();
+      for(const b of bullets){
+        if(!e.dead&&rectHit(b,e)){
+          e.dead=true;b.y=-20;score += e.type==="jet"?200:e.type==="heli"?150:100;explosion(e.x,e.y);
+        }
+      }
+    }
+    enemies=enemies.filter(e=>!e.dead&&e.y<H+20);
+
+    for(const p of pickups){
+      p.y+=(speed*.8)*dt;
+      if(rectHit(player,p)){fuel=Math.min(100,fuel+32);score+=50;explosion(p.x,p.y);sound("pickup");p.y=999;}
+    }
+    pickups=pickups.filter(p=>p.y<H+15);
+
+    for(const br of bridges){
+      br.y+=speed*dt;
+      if(Math.abs(br.y-player.y)<8 && Math.abs(player.x-br.c)<br.w/2) damage();
+    }
+    bridges=bridges.filter(b=>b.y<H+12);
+
+    for(const p of particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=30*dt;p.life-=dt;}
+    particles=particles.filter(p=>p.life>0);
+
+    score += Math.floor(dt*10);
+    $("score").textContent=String(score).padStart(6,"0");
+    $("fuel").textContent=String(Math.ceil(fuel)).padStart(3,"0");
+  }
+
+  function drawPixelPlane(x,y){
+    ctx.fillStyle="#f0f0d0";
+    ctx.fillRect(x-1,y-9,2,17);ctx.fillRect(x-5,y-3,10,4);ctx.fillRect(x-3,y+4,6,3);
+    ctx.fillStyle="#d04030";ctx.fillRect(x-1,y-7,2,5);ctx.fillRect(x-2,y+6,4,2);
+  }
+  function drawEnemy(e){
+    ctx.save();ctx.translate(Math.round(e.x),Math.round(e.y));
+    if(e.type==="boat"){
+      ctx.fillStyle="#1c1c18";ctx.fillRect(-6,-3,12,7);ctx.fillStyle="#ddd5a5";ctx.fillRect(-4,-5,7,2);ctx.fillStyle="#b03028";ctx.fillRect(-2,-2,4,3);
+    } else if(e.type==="heli"){
+      ctx.fillStyle="#30352e";ctx.fillRect(-5,-3,10,6);ctx.fillStyle="#eee5b0";ctx.fillRect(-8,-5,16,1);ctx.fillRect(-1,-7,2,3);ctx.fillStyle="#a52d28";ctx.fillRect(3,-2,3,2);
+    } else {
+      ctx.fillStyle="#d8d2a5";ctx.fillRect(-7,-2,14,4);ctx.fillRect(-2,-5,5,10);ctx.fillStyle="#b5332d";ctx.fillRect(-1,-4,2,3);
+    }
+    ctx.restore();
+  }
+  function drawFuel(p){
+    ctx.fillStyle="#e0d59c";ctx.fillRect(p.x-4,p.y-5,8,10);
+    ctx.fillStyle="#a8322a";ctx.fillRect(p.x-2,p.y-3,4,6);
+    ctx.fillStyle="#eee8bd";ctx.fillRect(p.x-1,p.y-2,2,4);
+  }
+  function drawRiver(){
+    ctx.fillStyle="#b8a96c";ctx.fillRect(0,0,W,H);
+    for(let y=0;y<H;y+=4){
+      const r=riverAt(y), l=Math.floor(r.c-r.w/2), rr=Math.ceil(r.c+r.w/2);
+      ctx.fillStyle="#274f5a";ctx.fillRect(l,y,rr-l,4);
+      ctx.fillStyle="#315f64";
+      const wave=((y+Math.floor(scroll))>>2)%2;
+      if(wave){ctx.fillRect(l+6,y+1,7,1);ctx.fillRect(rr-14,y+2,6,1);}
+      ctx.fillStyle="#8e8352";ctx.fillRect(l-2,y,2,4);ctx.fillRect(rr,y,2,4);
+    }
+  }
+  function drawBridge(b){
+    const l=b.c-b.w/2, r=b.c+b.w/2;
+    ctx.fillStyle="#8b6b3e";ctx.fillRect(l,b.y,r-l,6);
+    ctx.fillStyle="#24231d";for(let x=l;x<r;x+=7)ctx.fillRect(x,b.y,3,6);
+    ctx.fillStyle="#d6c98f";ctx.fillRect(l-2,b.y-2,2,10);ctx.fillRect(r,b.y-2,2,10);
+  }
+  function draw(){
+    drawRiver();
+    for(const b of bridges)drawBridge(b);
+    for(const p of pickups)drawFuel(p);
+    for(const e of enemies)drawEnemy(e);
+    ctx.fillStyle="#fff1b0";
+    for(const b of bullets)ctx.fillRect(Math.round(b.x),Math.round(b.y),b.w,b.h);
+    for(const p of particles){
+      ctx.globalAlpha=Math.max(0,p.life/p.max);
+      ctx.fillStyle=p.size>2?"#eee0a0":"#c43a2d";
+      ctx.fillRect(Math.round(p.x),Math.round(p.y),p.size,p.size);
+    }
+    ctx.globalAlpha=1;
+    if(running && (player.inv<=0 || Math.floor(time*12)%2===0))drawPixelPlane(Math.round(player.x),Math.round(player.y));
+    if(running){
+      ctx.fillStyle="rgba(0,0,0,.35)";ctx.fillRect(5,5,90,8);
+      ctx.fillStyle="#ded49d";ctx.fillRect(6,6,Math.max(0,88*fuel/100),6);
+    }
+  }
+
+  function loop(t){
+    const dt=Math.min(.033,(t-last)/1000||0);last=t;
+    update(dt);draw();requestAnimationFrame(loop);
+  }
+
+  function setKey(k,v){keys[k]=v;}
+  window.addEventListener("keydown",e=>{
+    if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"," ","w","a","s","d"].includes(e.key))e.preventDefault();
+    if(e.key===" "&&!e.repeat)fire();
+    setKey(e.key,true);
+  });
+  window.addEventListener("keyup",e=>setKey(e.key,false));
+
+  $("start").onclick=startGame;
+  const fireBtn=$("fire");
+  fireBtn.addEventListener("pointerdown",e=>{e.preventDefault();fire();});
+  document.querySelectorAll("[data-key]").forEach(btn=>{
+    const k=btn.dataset.key;
+    btn.addEventListener("pointerdown",e=>{e.preventDefault();setKey(k,true);});
+    btn.addEventListener("pointerup",e=>{e.preventDefault();setKey(k,false);});
+    btn.addEventListener("pointercancel",()=>setKey(k,false));
+    btn.addEventListener("pointerleave",()=>setKey(k,false));
+  });
+  let touchId=null;
+  canvas.addEventListener("pointerdown",e=>{if(!running)return;touchId=e.pointerId;canvas.setPointerCapture(touchId);});
+  canvas.addEventListener("pointermove",e=>{
+    if(e.pointerId!==touchId||!running)return;
+    const r=canvas.getBoundingClientRect();
+    player.x=(e.clientX-r.left)/r.width*W;
+    player.y=(e.clientY-r.top)/r.height*H;
+  });
+  canvas.addEventListener("pointerup",e=>{if(e.pointerId===touchId)touchId=null;});
+  canvas.addEventListener("pointercancel",e=>{if(e.pointerId===touchId)touchId=null;});
+
+  $("score").textContent="000000";$("fuel").textContent="100";$("hi").textContent=String(hi).padStart(6,"0");
+  requestAnimationFrame(loop);
+})();
