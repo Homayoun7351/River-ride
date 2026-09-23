@@ -72,7 +72,7 @@
     }
   }
   function addEnemy(type){
-    const r=riverAt(scroll-10);
+    const r=riverAt(-scroll-10);
     const margin=10;
     const x=rand(r.c-r.w/2+margin,r.c+r.w/2-margin);
     enemies.push({type,x,y:-12,w:type==="jet"?14:12,h:type==="jet"?7:10,vy:type==="jet"?rand(45,70):rand(22,40),phase:rand(0,9),dead:false});
@@ -136,7 +136,7 @@
     player.x=Math.max(5,Math.min(W-5,player.x));
     player.y=Math.max(28,Math.min(H-12,player.y));
 
-    const r=riverAt(player.y+scroll);
+    const r=riverAt(player.y-scroll);
     if(player.x < r.c-r.w/2+5 || player.x > r.c+r.w/2-5) {
       speed=Math.max(35,speed-35*dt);
       fuel=Math.max(0,fuel-7*dt);
@@ -223,7 +223,7 @@
   function drawRiver(){
     ctx.fillStyle="#b8a96c";ctx.fillRect(0,0,W,H);
     for(let y=0;y<H;y+=4){
-      const r=riverAt(y+scroll), l=Math.floor(r.c-r.w/2), rr=Math.ceil(r.c+r.w/2);
+      const r=riverAt(y-scroll), l=Math.floor(r.c-r.w/2), rr=Math.ceil(r.c+r.w/2);
       ctx.fillStyle="#274f5a";ctx.fillRect(l,y,rr-l,4);
       ctx.fillStyle="#315f64";
       const wave=((y+Math.floor(scroll))>>2)%2;
