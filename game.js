@@ -71,7 +71,8 @@
       particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:rand(.25,.7),max:.7,size:big?rand(1,3):1});
     }
   }
-  const attackerNames=["عمه","فی فی","فافا","معراج","احمد"];\n  function addEnemy(type){
+  const attackerNames=["عمه","فی فی","فافا","معراج","احمد"];
+  function addEnemy(type){
     const r=riverAt(-scroll-10);
     const margin=10;
     const x=rand(r.c-r.w/2+margin,r.c+r.w/2-margin);
