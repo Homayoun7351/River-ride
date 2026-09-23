@@ -16,12 +16,12 @@
 
   function resetRiver() {
     river = [];
-    let center = W/2, width = 170;
+    let center = W/2, width = Math.min(118,W-40);
     for (let y=0;y<=10000;y+=4) {
       center += (Math.random()-.5)*5;
-      center = Math.max(82, Math.min(W-82, center));
+      center = Math.max(38, Math.min(W-38, center));
       width += (Math.random()-.5)*3;
-      width = Math.max(115, Math.min(178,width));
+      width = Math.max(78, Math.min(122,width));
       river.push({y, c:center, w:width});
     }
   }
@@ -34,8 +34,8 @@
   function makeSegment() {
     const lastR = river[river.length-1];
     let c = lastR.c + (Math.random()-.5)*8;
-    c = Math.max(62, Math.min(W-62,c));
-    let w = Math.max(105, Math.min(176,lastR.w + (Math.random()-.5)*6));
+    c = Math.max(30, Math.min(W-30,c));
+    let w = Math.max(76, Math.min(122,lastR.w + (Math.random()-.5)*5));
     river.push({y:lastR.y+4,c,w});
     river.shift();
   }
@@ -108,7 +108,7 @@
     running=true; gameOver=false; score=0; fuel=100; speed=55; scroll=0;
     spawnTimer=0; bridgeTimer=rand(12,18); fuelTimer=rand(5,9);
     enemies=[];bullets=[];enemyBullets=[];particles=[];pickups=[];bridges=[];
-    player.x=W/2; player.y=H-42; player.inv=1.5;
+    player.x=W/2; player.y=H-55; player.inv=1.5;
     resetRiver();
     $("overlay").classList.add("hidden");
     sound("start");
