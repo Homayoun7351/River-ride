@@ -207,7 +207,8 @@
   }
   function drawEnemy(e){
     ctx.save();ctx.translate(Math.round(e.x),Math.round(e.y));
-    const w=e.type==="jet"?30:28, h=e.type==="jet"?18:20;
+    const isAmme=e.name==="عمه";
+    const w=isAmme?44:(e.type==="jet"?30:28), h=isAmme?28:(e.type==="jet"?18:20);
     ctx.fillStyle="#151716";ctx.fillRect(-w/2,-h/2,w,h);
     ctx.strokeStyle="#ddd5a5";ctx.lineWidth=2;ctx.strokeRect(-w/2,-h/2,w,h);
     ctx.fillStyle="#30352e";
