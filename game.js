@@ -352,32 +352,32 @@
   if(joystick){
     const knob=joystick.querySelector(".joy-knob");
     let joyPointer=null;
-    const updateJoy=e=>{
+    const setFromPointer=e=>{
       const r=joystick.getBoundingClientRect();
       const cx=r.left+r.width/2, cy=r.top+r.height/2;
       let dx=e.clientX-cx, dy=e.clientY-cy;
-      const max=r.width*.34;
-      const dist=Math.hypot(dx,dy);
-      if(dist>max){dx=dx/dist*max;dy=dy/dist*max;}
+      const max=r.width*0.34;
+      const d=Math.hypot(dx,dy);
+      if(d>max){dx=dx/d*max;dy=dy/d*max;}
       knob.style.transform=`translate(${dx}px,${dy}px)`;
       const nx=dx/max, ny=dy/max;
-      keys.ArrowLeft=nx<-.18; keys.ArrowRight=nx>.18;
-      keys.ArrowUp=ny<-.18; keys.ArrowDown=ny>.18;
+      keys.ArrowLeft=nx<-0.12; keys.ArrowRight=nx>0.12;
+      keys.ArrowUp=ny<-0.12; keys.ArrowDown=ny>0.12;
     };
-    const releaseJoy=()=>{
+    const reset=()=>{
       joyPointer=null;
       keys.ArrowLeft=keys.ArrowRight=keys.ArrowUp=keys.ArrowDown=false;
       knob.style.transform="translate(0,0)";
     };
     joystick.addEventListener("pointerdown",e=>{
       e.preventDefault(); joyPointer=e.pointerId;
-      joystick.setPointerCapture(joyPointer); updateJoy(e);
+      joystick.setPointerCapture(e.pointerId); setFromPointer(e);
     });
     joystick.addEventListener("pointermove",e=>{
-      if(e.pointerId===joyPointer){e.preventDefault();updateJoy(e);}
+      if(e.pointerId===joyPointer){e.preventDefault();setFromPointer(e);}
     });
-    joystick.addEventListener("pointerup",releaseJoy);
-    joystick.addEventListener("pointercancel",releaseJoy);
+    joystick.addEventListener("pointerup",reset);
+    joystick.addEventListener("pointercancel",reset);
   }
 
   $("score").textContent="000000";$("fuel").textContent="100";$("hi").textContent=String(hi).padStart(6,"0");
