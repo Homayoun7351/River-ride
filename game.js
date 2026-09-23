@@ -8,7 +8,7 @@
   let running = false, gameOver = false, last = 0, time = 0;
   let score = 0, fuel = 100, hi = Number(localStorage.getItem("riverRideHi") || 0);
   let speed = 55, scroll = 0, spawnTimer = 0, bridgeTimer = 12, fuelTimer = 7;
-  let river = [], enemies = [], bullets = [], particles = [], pickups = [], bridges = [];
+  let river = [], enemies = [], bullets = [], enemyBullets = [], particles = [], pickups = [], bridges = [];
   const player = { x: W/2, y: H-42, w: 11, h: 15, inv: 0 };
 
   const $ = id => document.getElementById(id);
@@ -92,11 +92,16 @@
     bullets.push({x:player.x,y:player.y-9,w:2,h:6,vy:-190});
     sound("fire");
   }
+  function enemyFire(e){
+    if(!running || e.y<8 || e.y>H-20) return;
+    enemyBullets.push({x:e.x,y:e.y+10,w:4,h:9,vy:rand(75,115),life:3});
+    sound("fire");
+  }
 
   function startGame(){
     running=true; gameOver=false; score=0; fuel=100; speed=55; scroll=0;
     spawnTimer=0; bridgeTimer=rand(12,18); fuelTimer=rand(5,9);
-    enemies=[];bullets=[];particles=[];pickups=[];bridges=[];
+    enemies=[];bullets=[];enemyBullets=[];particles=[];pickups=[];bridges=[];
     player.x=W/2; player.y=H-42; player.inv=1.5;
     resetRiver();
     $("overlay").classList.add("hidden");
@@ -169,6 +174,7 @@
     for(const e of enemies){
       e.y += (e.vy+speed*.35)*dt;
       e.phase+=dt*3;
+      if(!e.dead && Math.random()<dt*(e.type==="jet"?0.42:e.type==="heli"?0.28:0.18)) enemyFire(e);
       if(e.type==="jet") e.x += Math.sin(e.phase)*18*dt;
       if(e.type==="heli") e.x += Math.sin(e.phase)*8*dt;
       if(rectHit(player,e)) damage();
@@ -179,6 +185,12 @@
       }
     }
     enemies=enemies.filter(e=>!e.dead&&e.y<H+20);
+
+    for(const b of enemyBullets){
+      b.y+=b.vy*dt;b.life-=dt;
+      if(rectHit(player,b)){damage();b.life=0;explosion(b.x,b.y);}
+    }
+    enemyBullets=enemyBullets.filter(b=>b.life>0&&b.y<H+15);
 
     for(const p of pickups){
       p.y+=(speed*.8)*dt;
@@ -262,6 +274,10 @@
     for(const e of enemies)drawEnemy(e);
     ctx.fillStyle="#fff1b0";
     for(const b of bullets)ctx.fillRect(Math.round(b.x),Math.round(b.y),b.w,b.h);
+    for(const b of enemyBullets){
+      ctx.fillStyle="#e63b22";ctx.fillRect(Math.round(b.x)-2,Math.round(b.y)-4,4,7);
+      ctx.fillStyle="#ffd34d";ctx.fillRect(Math.round(b.x)-1,Math.round(b.y)-6,2,4);
+    }
     for(const p of particles){
       ctx.globalAlpha=Math.max(0,p.life/p.max);
       ctx.fillStyle=p.size>2?"#eee0a0":"#c43a2d";
