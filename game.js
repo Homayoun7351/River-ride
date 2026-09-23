@@ -4,13 +4,6 @@
   ctx.imageSmoothingEnabled = false;
 
   const W = canvas.width, H = canvas.height;
-  function resizeCanvas(){
-    const w=Math.max(1,Math.round(window.innerWidth*180/320));
-    const h=Math.max(1,Math.round(w*16/9));
-    canvas.width=w;
-    canvas.height=h;
-  }
-  resizeCanvas();
   const keys = Object.create(null);
   let running = false, gameOver = false, last = 0, time = 0;
   let score = 0, fuel = 100, hi = Number(localStorage.getItem("riverRideHi") || 0);
@@ -33,7 +26,6 @@
     }
   }
   resetRiver();
-  window.addEventListener("resize",()=>location.reload());
 
   function riverAt(y) {
     const i = Math.max(0, Math.min(river.length-1, Math.floor(y/4)));
