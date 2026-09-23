@@ -1,21 +1,21 @@
 <!doctype html>
-<html lang="en">
+<html lang="fa" dir="rtl">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>River Ride — Atari-style</title>
+<title>رودخانه سواری — بازی آتاری</title>
 <link rel="stylesheet" href="style.css?v=2">
 </head>
 <body>
 <div class="cabinet">
-  <div class="marquee">RIVER RIDE</div>
+  <div class="marquee">همایون تقدیم می‌کند</div>
   <div class="screen-wrap">
-    <canvas id="game" width="320" height="192" aria-label="River Ride game"></canvas>
+    <canvas id="game" width="320" height="192" aria-label="بازی رودخانه سواری"></canvas>
     <div id="overlay" class="overlay">
-      <div class="title">RIVER RIDE</div>
-      <div class="subtitle">ATARI-STYLE EDITION</div>
-      <button id="start">START GAME</button>
-      <div class="help">ARROWS / WASD · SPACE TO FIRE<br>Touch: drag to fly · FIRE button to shoot</div>
+      <div class="title">رودخانه سواری</div>
+      <div class="subtitle">نسخه سبک آتاری</div>
+      <button id="start">شروع بازی</button>
+      <div class="help">کلیدهای جهت‌دار یا WASD · فاصله برای شلیک<br>لمس: هواپیما را بکشید · دکمه شلیک برای تیراندازی</div>
     </div>
   </div>
   <div class="controls">
@@ -23,10 +23,10 @@
       <button data-key="ArrowUp">▲</button>
       <div><button data-key="ArrowLeft">◀</button><button data-key="ArrowDown">▼</button><button data-key="ArrowRight">▶</button></div>
     </div>
-    <button id="fire">FIRE</button>
+    <button id="fire">شلیک</button>
   </div>
-  <div class="readout"><span>SCORE <b id="score">000000</b></span><span>FUEL <b id="fuel">100</b>%</span><span>HI <b id="hi">000000</b></span></div>
+  <div class="readout"><span>امتیاز <b id="score">000000</b></span><span>سوخت <b id="fuel">100</b>%</span><span>رکورد <b id="hi">000000</b></span></div>
 </div>
-<script src="game.js?v=4"></script>
+<script src="game.js?v=5"></script>
 </body>
 </html>
